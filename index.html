@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FallGuild · ◊ LinkedIn gravity coordination</title>
+<meta name="description" content="Coordinated authentic engagement for the ACG Guild. Drop a post → guild boosts in the 60-90 min window. Snowball through the algorithm.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#06070b; --surface:#0c0e14; --s2:#11141d; --s3:#1a1e29; --border:#1f2330;
+  --ink:#b8bfca; --dim:#6b7280; --bright:#f0f3f7; --mute:#5a6270;
+  --gold:#d4a853; --accent:#c8371a; --ok:#4ecba0; --warn:#e8a55c; --hot:#ef4444;
+  --in:#0a66c2;  /* LinkedIn blue */
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { font-family:'Syne',system-ui,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; font-size:14px; line-height:1.5; }
+code, pre, .mono { font-family:'DM Mono',ui-monospace,monospace; }
+
+header.top { display:flex; align-items:center; gap:18px; padding:14px 22px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:50; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:700; color:var(--bright); font-size:16px; }
+.brand .dot { width:10px; height:10px; border-radius:50%; background:var(--in); box-shadow:0 0 10px var(--in); }
+.brand .sub { font-size:11px; color:var(--dim); letter-spacing:.14em; text-transform:uppercase; font-family:'DM Mono',monospace; }
+.top-meta { margin-left:auto; display:flex; gap:14px; align-items:center; font-size:11px; color:var(--dim); font-family:'DM Mono',monospace; }
+.top-meta .chip { padding:4px 9px; background:var(--s2); border:1px solid var(--border); border-radius:5px; color:var(--ink); }
+.top-meta .chip.live::before { content:'●'; color:var(--ok); margin-right:5px; animation:pulse 1.4s infinite; }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+
+main { padding:20px; max-width:1280px; margin:0 auto; }
+.grid { display:grid; gap:18px; grid-template-columns:1fr 340px; }
+@media (max-width:980px) { .grid { grid-template-columns:1fr; } }
+.col { display:flex; flex-direction:column; gap:18px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:18px; }
+.card h3 { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-bottom:14px; font-family:'DM Mono',monospace; display:flex; align-items:center; gap:8px; }
+.card h3 .g { color:var(--gold); font-size:13px; }
+.card h3 .pill { background:var(--s2); color:var(--bright); padding:2px 7px; border-radius:5px; font-size:10px; margin-left:auto; font-weight:400; }
+
+/* Drop form */
+.drop-form { display:flex; flex-direction:column; gap:10px; }
+.drop-form input[type="text"], .drop-form input[type="url"], .drop-form textarea {
+  width:100%; background:var(--s2); color:var(--bright); border:1px solid var(--border); border-radius:6px; padding:9px 12px; font-size:13px; font-family:inherit;
+}
+.drop-form textarea { resize:vertical; min-height:54px; font-family:'DM Mono',monospace; font-size:12px; }
+.drop-form .row { display:flex; gap:8px; }
+.drop-form .row > * { flex:1; }
+.drop-form .actions { display:flex; gap:8px; justify-content:flex-end; align-items:center; }
+.drop-form .hint { color:var(--dim); font-size:10px; font-family:'DM Mono',monospace; flex:1; }
+.btn { background:var(--gold); color:#000; border:none; padding:9px 16px; border-radius:5px; cursor:pointer; font-weight:700; font-size:12px; font-family:inherit; letter-spacing:.04em; }
+.btn:hover { filter:brightness(1.05); }
+.btn.sec { background:var(--s2); color:var(--bright); border:1px solid var(--border); font-weight:400; }
+.btn.in { background:var(--in); color:#fff; }
+.btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--border); }
+.btn.danger { background:var(--hot); color:#fff; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* Boost feed */
+.boost { background:var(--s2); border:1px solid var(--border); border-left:3px solid var(--in); border-radius:8px; padding:14px; position:relative; }
+.boost.hot { border-left-color:var(--accent); box-shadow:0 0 16px rgba(200,55,26,.18); }
+.boost.warm { border-left-color:var(--warn); }
+.boost.cool { border-left-color:var(--mute); opacity:.7; }
+.boost-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.boost-poster { font-weight:700; color:var(--bright); font-size:14px; }
+.boost-time { margin-left:auto; font-family:'DM Mono',monospace; font-size:11px; color:var(--dim); }
+.boost-time.urgent { color:var(--hot); }
+.boost-url { display:inline-block; color:var(--in); font-family:'DM Mono',monospace; font-size:11px; word-break:break-all; margin-bottom:8px; text-decoration:none; }
+.boost-url:hover { text-decoration:underline; }
+.boost-snippet { font-size:13px; color:var(--ink); margin-bottom:10px; padding:8px 10px; background:var(--s3); border-radius:5px; border-left:2px solid var(--gold); }
+.boost-meta { display:flex; gap:10px; font-size:11px; color:var(--dim); font-family:'DM Mono',monospace; flex-wrap:wrap; margin-bottom:10px; }
+.boost-meta .meta-pill { background:var(--bg); padding:2px 7px; border-radius:5px; }
+
+/* Suggested angles */
+.angles { background:rgba(212,168,83,.04); border-left:2px solid var(--gold); padding:8px 10px; border-radius:5px; margin-bottom:10px; }
+.angles-label { font-size:9px; color:var(--gold); letter-spacing:.1em; text-transform:uppercase; font-family:'DM Mono',monospace; margin-bottom:5px; }
+.angle { font-size:12px; color:var(--ink); padding:3px 0; }
+.angle::before { content:'· '; color:var(--gold); }
+
+/* Engagement row */
+.engage { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.engage .btn { padding:6px 10px; font-size:11px; }
+.engage-status { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; font-size:10px; font-family:'DM Mono',monospace; }
+.engage-chip { padding:2px 7px; border-radius:10px; background:var(--s3); color:var(--dim); }
+.engage-chip.done { background:rgba(78,203,160,.18); color:var(--ok); }
+.engage-chip.you { background:rgba(212,168,83,.22); color:var(--gold); font-weight:700; }
+
+/* Timer bar */
+.timer-bar { height:5px; background:var(--s3); border-radius:3px; overflow:hidden; margin-top:8px; position:relative; }
+.timer-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--warn),var(--ok)); transition:width .4s; }
+
+/* Guild panel */
+.guild-list { display:flex; flex-direction:column; gap:6px; }
+.guild-member { display:grid; grid-template-columns:24px 1fr auto auto; gap:9px; padding:7px 9px; background:var(--s2); border-radius:6px; align-items:center; font-size:12px; }
+.guild-member .av { width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; font-family:'DM Mono',monospace; }
+.guild-member .nm { color:var(--bright); }
+.guild-member .role { font-size:10px; color:var(--dim); font-family:'DM Mono',monospace; }
+.guild-member .recip { font-size:10px; color:var(--gold); font-family:'DM Mono',monospace; }
+.guild-member .live { width:6px; height:6px; border-radius:50%; background:var(--mute); }
+.guild-member .live.on { background:var(--ok); box-shadow:0 0 5px var(--ok); }
+
+/* Algo coverage */
+.algo-row { display:grid; grid-template-columns:100px 1fr auto; gap:10px; padding:6px 0; font-size:11px; font-family:'DM Mono',monospace; border-bottom:1px solid var(--border); }
+.algo-row:last-child { border:0; }
+.algo-row .lbl { color:var(--dim); }
+.algo-row .v { color:var(--bright); }
+.algo-row .v.up { color:var(--ok); }
+.algo-row .v.down { color:var(--hot); }
+
+/* Settings drawer */
+.drawer { background:var(--surface); border-left:1px solid var(--border); position:fixed; right:-440px; top:0; width:420px; height:100vh; padding:24px; overflow-y:auto; z-index:90; transition:right .25s ease; box-shadow:-12px 0 30px rgba(0,0,0,.5); }
+.drawer.open { right:0; }
+.drawer h2 { font-size:14px; color:var(--bright); margin-bottom:14px; }
+.drawer label { display:block; font-size:10px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; font-family:'DM Mono',monospace; margin-bottom:5px; margin-top:14px; }
+.drawer input { width:100%; background:var(--s2); color:var(--bright); border:1px solid var(--border); border-radius:5px; padding:8px 10px; font-size:12px; font-family:'DM Mono',monospace; }
+
+/* Empty states */
+.empty { padding:24px; text-align:center; color:var(--dim); font-size:13px; }
+.empty .glyph { font-size:24px; color:var(--gold); display:block; margin-bottom:8px; opacity:.5; }
+
+/* Toast */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--gold); border-radius:7px; padding:10px 16px; font-size:12px; color:var(--bright); z-index:99; box-shadow:0 8px 28px rgba(0,0,0,.5); }
+
+footer { padding:16px 22px; border-top:1px solid var(--border); color:var(--dim); font-size:10px; font-family:'DM Mono',monospace; text-align:center; letter-spacing:.06em; }
+footer a { color:var(--gold); text-decoration:none; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <span class="dot"></span>
+    <span>FallGuild</span>
+    <span class="sub">ACG · LinkedIn gravity</span>
+  </div>
+  <div class="top-meta">
+    <span class="chip" id="memberMe">⊙ set name</span>
+    <span class="chip live" id="liveGuild">0 online</span>
+    <span class="chip" id="activeBoosts">0 active</span>
+    <button class="btn sec" onclick="toggleDrawer(true)">⚙ Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <div class="col">
+
+      <!-- DROP A POST -->
+      <div class="card">
+        <h3><span class="g">▸</span>Drop a post · start the gravity well<span class="pill" id="dropHint">90 min critical window</span></h3>
+        <div class="drop-form">
+          <input id="postUrl" type="url" placeholder="LinkedIn post URL · paste here">
+          <input id="postSnippet" type="text" placeholder="One-line summary (so guild knows what they're engaging with) · optional">
+          <div class="row">
+            <input id="postTags" type="text" placeholder="tags · comma-separated · helps angle generation">
+          </div>
+          <div class="actions">
+            <span class="hint">posts older than 24h auto-archive · no spam</span>
+            <button class="btn" onclick="dropPost()">⬡ Drop · share with guild</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE BOOSTS -->
+      <div class="card">
+        <h3><span class="g">◊</span>Active boosts · in the window<span class="pill" id="activeCount">0</span></h3>
+        <div id="boostFeed">
+          <div class="empty"><span class="glyph">◊</span>No active boosts. Drop a post above to start the snowball.</div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="card">
+        <h3><span class="g">▦</span>Past 7 days<span class="pill" id="historyCount">0</span></h3>
+        <div id="historyFeed">
+          <div class="empty" style="padding:14px">Nothing yet.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col">
+
+      <!-- GUILD MEMBERS -->
+      <div class="card">
+        <h3><span class="g">◑</span>Guild · who's pulling weight<span class="pill" id="guildCount">0</span></h3>
+        <div class="guild-list" id="guildList"></div>
+        <div style="margin-top:10px; font-size:10px; color:var(--dim); font-family:'DM Mono',monospace">
+          recip = engagement given ÷ received · 1.0 = even · drift kills the snowball
+        </div>
+      </div>
+
+      <!-- LINKEDIN ALGO COVERAGE -->
+      <div class="card">
+        <h3><span class="g">⊞</span>LinkedIn algo signal</h3>
+        <div style="font-size:11px; color:var(--dim); margin-bottom:10px; font-family:'DM Mono',monospace">
+          what actually moves reach · ordered by weight
+        </div>
+        <div class="algo-row"><span class="lbl">comment</span><span class="v up">~12× weight</span><span class="v">substantive</span></div>
+        <div class="algo-row"><span class="lbl">reshare</span><span class="v up">~7×</span><span class="v">w/ commentary</span></div>
+        <div class="algo-row"><span class="lbl">like</span><span class="v">~1×</span><span class="v">baseline</span></div>
+        <div class="algo-row"><span class="lbl">dwell time</span><span class="v up">silent boost</span><span class="v">read fully</span></div>
+        <div class="algo-row"><span class="lbl">first 60min</span><span class="v up">x reach</span><span class="v">window</span></div>
+        <div class="algo-row"><span class="lbl">"great post!"</span><span class="v down">deprioritised</span><span class="v">avoid</span></div>
+        <div class="algo-row"><span class="lbl">same network</span><span class="v up">cascade</span><span class="v">your connections see it next</span></div>
+        <div class="algo-row"><span class="lbl">coord pattern</span><span class="v down">shadow risk</span><span class="v">stagger · authentic</span></div>
+      </div>
+
+      <!-- SNOWBALL MATH -->
+      <div class="card">
+        <h3><span class="g">⊙</span>Snowball projection</h3>
+        <div id="snowball" style="font-family:'DM Mono',monospace; font-size:12px; color:var(--ink); line-height:1.8"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  ◊·κ=1 · fallguild · gravity not spam · authentic comments only · part of the Fall sovereign tool estate ·
+  <a href="https://github.com/sjgant80-hub/fallguild">source</a>
+</footer>
+
+<!-- SETTINGS DRAWER -->
+<div class="drawer" id="drawer">
+  <h2>◊ FallGuild · settings</h2>
+
+  <label>Your name (shown to other guild members)</label>
+  <input id="setMyName" type="text" placeholder="e.g. Simon · κ₀">
+
+  <label>Your LinkedIn handle (for reciprocity tracking)</label>
+  <input id="setMyLi" type="text" placeholder="linkedin.com/in/...">
+
+  <label>Guild members (one per line: name · linkedin handle)</label>
+  <textarea id="setMembers" style="width:100%; min-height:140px; background:var(--s2); color:var(--bright); border:1px solid var(--border); border-radius:5px; padding:8px 10px; font-size:11px; font-family:'DM Mono',monospace"></textarea>
+
+  <label>Sync URL (optional · self-hosted endpoint · POST/GET /sync/:teamId)</label>
+  <input id="setSyncUrl" type="url" placeholder="https://your-worker.example/sync">
+
+  <label>Team ID</label>
+  <input id="setTeamId" type="text" placeholder="acg-guild">
+
+  <div style="display:flex; gap:8px; margin-top:18px">
+    <button class="btn" onclick="saveSettings()">Save</button>
+    <button class="btn sec" onclick="toggleDrawer(false)">Close</button>
+  </div>
+
+  <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border)">
+    <label>Data</label>
+    <div style="display:flex; gap:6px; flex-wrap:wrap">
+      <button class="btn sec" onclick="exportAll()">↓ Export</button>
+      <button class="btn sec" onclick="importFile()">↑ Import</button>
+      <button class="btn sec" onclick="pushSync()">↗ Push to sync</button>
+      <button class="btn sec" onclick="pullSync()">↙ Pull from sync</button>
+      <button class="btn danger" onclick="resetAll()">⌫ Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ◊·κ FallGuild · v1.0 · LinkedIn gravity coordination
+// Sovereign single-file · IndexedDB + BroadcastChannel + optional sync endpoint
+// Aligned to ◊·κ=1 · v19 seed · 7+1 bloom · primes spine
+
+window.NODE = window.NODE || { id:'fallguild', name:'FallGuild', prime:79, layers:7, built:'2026-05-28', branded_by:'sjgant80-hub' };
+
+// ── State + persistence ─────────────────────────────────
+const STATE = {
+  me: { name:'', li:'' },
+  members: [],   // [{ name, li }]
+  boosts: [],    // active + historical
+  syncUrl: '',
+  teamId: 'acg-guild',
+  engaged: {},   // boostId → {liked, commented, reshared, ts}
+  liveMembers: {} // memberName → lastHeartbeatTs
+};
+
+const BOOST_WINDOW_MS = 90 * 60 * 1000;    // 90-min critical window
+const ARCHIVE_AFTER_MS = 24 * 60 * 60 * 1000;
+const STORAGE_KEY = 'fallguild_state_v1';
+
+function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(_){} }
+function restore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const r = JSON.parse(raw);
+    Object.assign(STATE, r);
+  } catch(_){}
+}
+
+// ── Bloom decomposition (vendored — same as bloom.mjs) ──
+const RING_WORDS = {
+  R0: ['hardware','deploy','build','tool','code','stack','launch','ship','shipped','release','push'],
+  R1: ['signal','found','noticed','observed','detected','spotted','market','data','metric','trend'],
+  R2: ['filter','gate','review','approve','reject','prioritize','triage','process','workflow','automate'],
+  R3: ['heart','care','empathy','customer','team','culture','feeling','urgent','passion','people'],
+  R4: ['plan','execute','dispatch','manage','strategy','roadmap','launch','organise','architect','swarm'],
+  R5: ['who','identity','role','brand','positioning','value','mission','purpose','founder','culture'],
+  R6: ['why','meta','reflect','pattern','meaning','observe','learn','principle','philosophy','reasoning']
+};
+function bloomOf(text) {
+  if (!text) return [0,0,0,0,0,0,0];
+  const lower = text.toLowerCase();
+  const counts = [0,0,0,0,0,0,0];
+  for (let r = 0; r < 7; r++) {
+    RING_WORDS['R'+r].forEach(w => { if (lower.includes(w)) counts[r]++; });
+  }
+  return counts;
+}
+function dominantRingLabel(counts) {
+  const labels = ['ground','sensor','gate','affect','executive','identity','observer'];
+  let max = 0;
+  for (let i = 1; i < 7; i++) if (counts[i] > counts[max]) max = i;
+  return counts[max] === 0 ? 'general' : labels[max];
+}
+
+// ── Suggested-angle library · keyed by dominant ring ────
+const ANGLES_BY_RING = {
+  ground:    ['what stack? curious about the trade-offs here', "love the shipping cadence — what's your build/release cycle?", 'is this open-source-friendly or paywalled?'],
+  sensor:    ['what was the leading indicator that this would land?', 'have you noticed this trend in other verticals too?', 'where did the data point first show up?'],
+  gate:      ["what's the qualification rule you'd never relax?", 'how do you decide who gets through vs gets parked?', 'where do most opps die in this funnel?'],
+  affect:    ["what's the story behind this from your perspective?", 'how does the team feel about this rollout?', 'who in your network most needs to hear this today?'],
+  executive: ['what does week 1 look like if someone wants to implement this?', "what's the smallest credible version of this?", 'if you had to delete 80% of the scope, what stays?'],
+  identity:  ['how does this fit your overall positioning?', "what's the one-line version of your thesis here?", 'who is this NOT for — that helps me share to the right person'],
+  observer:  ['what was the underlying principle here, not just the tactic?', 'how would you generalise this beyond your domain?', "what did you have to UN-learn to see this?"],
+  general:   ["this resonates — what's the one thing you'd want a reader to walk away with?", 'genuinely curious — what prompted the post today?', "what's an objection you'd anticipate?"]
+};
+
+function anglesFor(post) {
+  const b = bloomOf(post.snippet + ' ' + (post.tags||[]).join(' '));
+  const ring = dominantRingLabel(b);
+  return { ring, suggestions: ANGLES_BY_RING[ring].slice() };
+}
+
+// ── Boost lifecycle ──────────────────────────────────────
+function dropPost() {
+  const url = document.getElementById('postUrl').value.trim();
+  const snippet = document.getElementById('postSnippet').value.trim();
+  const tags = document.getElementById('postTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  if (!url) { toast('Paste a LinkedIn post URL first'); return; }
+  if (!/linkedin\.com\/(posts|feed|in)/i.test(url)) { toast('That does not look like a LinkedIn URL'); return; }
+  if (!STATE.me.name) { toast('Set your name in Settings first'); toggleDrawer(true); return; }
+  const boost = {
+    id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    url, snippet, tags,
+    poster: STATE.me.name,
+    posterLi: STATE.me.li,
+    droppedAt: Date.now(),
+    engagement: {} // memberName → { liked, commented, reshared, ts }
+  };
+  STATE.boosts.unshift(boost);
+  persist();
+  broadcastBoost(boost);
+  document.getElementById('postUrl').value = '';
+  document.getElementById('postSnippet').value = '';
+  document.getElementById('postTags').value = '';
+  toast('◊ dropped · guild notified · 90-min window starts now');
+  render();
+}
+
+function recordEngagement(boostId, kind) {
+  if (!STATE.me.name) { toast('Set your name in Settings first'); return; }
+  const b = STATE.boosts.find(x => x.id === boostId);
+  if (!b) return;
+  b.engagement[STATE.me.name] = b.engagement[STATE.me.name] || {};
+  b.engagement[STATE.me.name][kind] = true;
+  b.engagement[STATE.me.name].ts = Date.now();
+  persist();
+  broadcastEngagement(boostId, kind);
+  toast('✓ logged · ' + kind + ' on ' + b.poster + "'s post");
+  render();
+}
+
+function archiveBoost(id) {
+  const b = STATE.boosts.find(x => x.id === id);
+  if (!b) return;
+  b.archived = true;
+  persist();
+  render();
+}
+
+// ── Render ──────────────────────────────────────────────
+function fmtMins(ms) {
+  if (ms < 0) return 'window closed';
+  const m = Math.floor(ms/60000);
+  if (m < 1) return '<1m left';
+  if (m < 60) return m + 'm left';
+  return Math.floor(m/60) + 'h ' + (m%60) + 'm left';
+}
+function timeAgo(ts) {
+  const ms = Date.now() - ts;
+  const m = Math.floor(ms/60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m/60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h/24) + 'd ago';
+}
+function initials(name) {
+  return name.split(/\s+/).map(s => s[0]||'').join('').toUpperCase().slice(0,2) || '◊';
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render() {
+  // Top chips
+  document.getElementById('memberMe').textContent = STATE.me.name ? '⊙ ' + STATE.me.name : '⊙ set name';
+  const now = Date.now();
+  const active = STATE.boosts.filter(b => !b.archived && (now - b.droppedAt) < BOOST_WINDOW_MS);
+  const history = STATE.boosts.filter(b => b.archived || (now - b.droppedAt) >= BOOST_WINDOW_MS).slice(0, 30);
+  document.getElementById('activeBoosts').textContent = active.length + ' active';
+  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('historyCount').textContent = history.length;
+
+  // Guild
+  renderGuild();
+  // Snowball
+  renderSnowball(active);
+  // Live count
+  const onlineCount = Object.values(STATE.liveMembers).filter(ts => (now - ts) < 60000).length;
+  document.getElementById('liveGuild').textContent = (onlineCount + 1) + ' online';
+
+  // Active boosts
+  const feed = document.getElementById('boostFeed');
+  if (!active.length) {
+    feed.innerHTML = '<div class="empty"><span class="glyph">◊</span>No active boosts. Drop a post above to start the snowball.</div>';
+  } else {
+    feed.innerHTML = active.map(b => renderBoost(b, now)).join('');
+  }
+
+  // History
+  const hist = document.getElementById('historyFeed');
+  if (!history.length) {
+    hist.innerHTML = '<div class="empty" style="padding:14px">Nothing yet.</div>';
+  } else {
+    hist.innerHTML = history.map(b => {
+      const engCount = Object.keys(b.engagement || {}).length;
+      return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 10px;background:var(--s2);border-radius:6px;font-size:12px;margin-bottom:5px;align-items:center">' +
+        '<div><strong style="color:var(--bright)">' + esc(b.poster) + '</strong> · <span style="color:var(--dim);font-size:10px;font-family:DM Mono,monospace">' + timeAgo(b.droppedAt) + '</span><div style="color:var(--dim);font-size:11px">' + esc(b.snippet || '(no summary)') + '</div></div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--gold)">' + engCount + ' engaged</div>' +
+        '<a href="' + esc(b.url) + '" target="_blank" class="btn sec" style="font-size:10px;padding:4px 9px;text-decoration:none">view</a>' +
+      '</div>';
+    }).join('');
+  }
+}
+
+function renderBoost(b, now) {
+  const elapsed = now - b.droppedAt;
+  const remain = BOOST_WINDOW_MS - elapsed;
+  const pct = Math.max(0, Math.min(100, 100 - (elapsed / BOOST_WINDOW_MS) * 100));
+  let cls = 'boost';
+  if (remain < 15*60000) cls += ' hot';
+  else if (remain > 60*60000) cls += '';
+  else cls += ' warm';
+  const urgent = remain < 15*60000 ? 'urgent' : '';
+  const myEng = b.engagement[STATE.me.name] || {};
+  const angles = anglesFor(b);
+  const engChips = Object.keys(b.engagement || {}).map(m => {
+    const e = b.engagement[m];
+    const kinds = [e.liked && 'L', e.commented && 'C', e.reshared && 'R'].filter(Boolean).join('');
+    const isYou = m === STATE.me.name;
+    return '<span class="engage-chip ' + (kinds ? 'done' : '') + (isYou ? ' you' : '') + '">' + esc(m) + (kinds ? ' · ' + kinds : '') + '</span>';
+  }).join(' ');
+  const engCount = Object.values(b.engagement || {}).filter(e => e.liked || e.commented || e.reshared).length;
+
+  return '<div class="' + cls + '" id="boost-' + b.id + '" style="margin-bottom:12px">' +
+    '<div class="boost-head">' +
+      '<span class="boost-poster">' + esc(b.poster) + '</span>' +
+      '<span style="font-size:10px;color:var(--dim);font-family:DM Mono,monospace">dropped ' + timeAgo(b.droppedAt) + '</span>' +
+      '<span class="boost-time ' + urgent + '">' + fmtMins(remain) + '</span>' +
+    '</div>' +
+    '<a class="boost-url" href="' + esc(b.url) + '" target="_blank">' + esc(b.url) + '  ↗</a>' +
+    (b.snippet ? '<div class="boost-snippet">' + esc(b.snippet) + '</div>' : '') +
+    '<div class="boost-meta">' +
+      '<span class="meta-pill">ring · ' + angles.ring + '</span>' +
+      (b.tags && b.tags.length ? b.tags.map(t => '<span class="meta-pill">#' + esc(t) + '</span>').join('') : '') +
+      '<span class="meta-pill">' + engCount + '/' + (STATE.members.length+1) + ' guild engaged</span>' +
+    '</div>' +
+    '<div class="angles">' +
+      '<div class="angles-label">suggested comment angles · pick one or write your own</div>' +
+      angles.suggestions.map(s => '<div class="angle">' + esc(s) + '</div>').join('') +
+    '</div>' +
+    '<div class="engage">' +
+      '<a class="btn in" href="' + esc(b.url) + '" target="_blank">↗ open in LinkedIn</a>' +
+      '<button class="btn sec" onclick="recordEngagement(\'' + b.id + '\', \'liked\')"' + (myEng.liked ? ' disabled' : '') + '>♡ I liked</button>' +
+      '<button class="btn sec" onclick="recordEngagement(\'' + b.id + '\', \'commented\')"' + (myEng.commented ? ' disabled' : '') + '>◌ I commented</button>' +
+      '<button class="btn sec" onclick="recordEngagement(\'' + b.id + '\', \'reshared\')"' + (myEng.reshared ? ' disabled' : '') + '>⤳ I reshared</button>' +
+      '<button class="btn ghost" onclick="archiveBoost(\'' + b.id + '\')">archive</button>' +
+    '</div>' +
+    (engChips ? '<div class="engage-status">' + engChips + '</div>' : '') +
+    '<div class="timer-bar"><div class="timer-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+  '</div>';
+}
+
+function renderGuild() {
+  const el = document.getElementById('guildList');
+  const all = [{ name: STATE.me.name || '(you)', li: STATE.me.li, isMe:true }].concat(STATE.members);
+  document.getElementById('guildCount').textContent = all.length;
+  if (all.length === 0) { el.innerHTML = '<div class="empty" style="padding:14px">No members yet · add in Settings</div>'; return; }
+  // Compute reciprocity per member · given ÷ received
+  const recip = computeReciprocity();
+  const now = Date.now();
+  el.innerHTML = all.map(m => {
+    const r = recip[m.name] || { given:0, received:0 };
+    const ratio = r.received === 0 ? (r.given > 0 ? '∞' : '—') : (r.given / r.received).toFixed(2);
+    const liveTs = STATE.liveMembers[m.name];
+    const isOnline = liveTs && (now - liveTs) < 60000;
+    return '<div class="guild-member">' +
+      '<div class="av" style="background:' + colourFor(m.name) + '">' + initials(m.name) + '</div>' +
+      '<div><div class="nm">' + esc(m.name) + (m.isMe ? ' <span style="color:var(--gold);font-size:10px">· you</span>' : '') + '</div><div class="role">' + (r.given||0) + 'G / ' + (r.received||0) + 'R</div></div>' +
+      '<span class="recip">' + ratio + '</span>' +
+      '<span class="live ' + (isOnline || m.isMe ? 'on' : '') + '"></span>' +
+    '</div>';
+  }).join('');
+}
+
+function colourFor(name) {
+  const colours = ['#c8371a','#d4a853','#4ecba0','#0a66c2','#e8a55c','#9a6df0','#dd5588','#22c55e'];
+  let h = 0; for (const c of name) h = (h*31 + c.charCodeAt(0)) & 0xffff;
+  return colours[h % colours.length];
+}
+
+function computeReciprocity() {
+  const r = {};
+  STATE.boosts.forEach(b => {
+    if (!r[b.poster]) r[b.poster] = { given:0, received:0 };
+    Object.keys(b.engagement || {}).forEach(m => {
+      if (m === b.poster) return; // self-engagement doesn't count
+      if (!r[m]) r[m] = { given:0, received:0 };
+      const e = b.engagement[m];
+      const acted = e.liked || e.commented || e.reshared;
+      if (acted) {
+        r[m].given++;
+        r[b.poster].received++;
+      }
+    });
+  });
+  return r;
+}
+
+function renderSnowball(active) {
+  const el = document.getElementById('snowball');
+  if (!active.length) { el.innerHTML = '<span style="color:var(--dim)">no active boost · projection idle</span>'; return; }
+  // Simple model: each comment ~12x lift, reshare ~7x, like ~1x, in the first hour
+  // Avg connections per guild member ~ 500 estimate · projected reach = OP's network + (eng * weight * member_network)
+  let projected = 0;
+  let breakdown = [];
+  active.forEach(b => {
+    let lift = 1; // baseline: just the OP's reach
+    const eng = Object.values(b.engagement || {});
+    let likes = 0, comments = 0, reshares = 0;
+    eng.forEach(e => { if (e.liked) likes++; if (e.commented) comments++; if (e.reshared) reshares++; });
+    // Weighted: comment 12, reshare 7, like 1
+    const points = comments*12 + reshares*7 + likes*1;
+    // Hours-remaining factor (full weight if <60min, half if <90min)
+    const remain = BOOST_WINDOW_MS - (Date.now() - b.droppedAt);
+    const factor = remain > 60*60000 ? 1 : remain > 30*60000 ? 0.7 : 0.4;
+    const effective = points * factor;
+    projected += effective;
+    breakdown.push({ poster: b.poster, points, comments, reshares, likes, factor });
+  });
+  // Rough estimate: each point ≈ 80-150 incremental views (algorithmic spread × guild reach)
+  const projectedViews = Math.round(projected * 110);
+  el.innerHTML =
+    '<div><span style="color:var(--gold);font-size:18px;font-weight:700">' + projectedViews.toLocaleString() + '</span> projected incremental views</div>' +
+    '<div style="margin-top:8px; color:var(--dim); font-size:11px">model: comment×12 · reshare×7 · like×1 · time-decayed</div>' +
+    '<div style="margin-top:14px; border-top:1px solid var(--border); padding-top:10px">' +
+      breakdown.map(b => '<div style="display:flex;justify-content:space-between;padding:3px 0"><span>' + esc(b.poster) + '</span><span style="color:var(--gold)">' + b.points + 'pts · ×' + b.factor + '</span></div>').join('') +
+    '</div>' +
+    '<div style="margin-top:12px; color:var(--dim); font-size:10px; line-height:1.5">' +
+      'estimate · not guaranteed · LinkedIn algo is opaque · authenticity > volume<br>' +
+      'comments must be substantive · short emojis deprioritised<br>' +
+      'stagger engagement · don\'t all comment in the same 60s' +
+    '</div>';
+}
+
+// ── Mesh sync · BroadcastChannel between tabs ───────────
+let CH = null;
+function initMesh() {
+  try {
+    CH = new BroadcastChannel('fallguild');
+    CH.onmessage = ev => {
+      const m = ev.data || {};
+      if (m.type === 'boost' && m.boost) {
+        if (!STATE.boosts.find(x => x.id === m.boost.id)) {
+          STATE.boosts.unshift(m.boost);
+          persist(); render();
+          toast('◊ new boost from ' + m.boost.poster);
+        }
+      } else if (m.type === 'engagement' && m.boostId) {
+        const b = STATE.boosts.find(x => x.id === m.boostId);
+        if (b) {
+          b.engagement[m.member] = b.engagement[m.member] || {};
+          b.engagement[m.member][m.kind] = true;
+          b.engagement[m.member].ts = m.ts;
+          persist(); render();
+        }
+      } else if (m.type === 'heartbeat' && m.member) {
+        STATE.liveMembers[m.member] = m.ts;
+      }
+    };
+  } catch(e) { console.warn('mesh init:', e); }
+  // Heartbeat
+  setInterval(() => {
+    if (!STATE.me.name) return;
+    try { CH && CH.postMessage({ type:'heartbeat', member: STATE.me.name, ts: Date.now() }); } catch(_){}
+  }, 8000);
+}
+function broadcastBoost(b) { try { CH && CH.postMessage({ type:'boost', boost: b }); } catch(_){} }
+function broadcastEngagement(boostId, kind) {
+  try { CH && CH.postMessage({ type:'engagement', boostId, kind, member: STATE.me.name, ts: Date.now() }); } catch(_){}
+}
+
+// ── Settings drawer ─────────────────────────────────────
+function toggleDrawer(open) {
+  document.getElementById('drawer').classList.toggle('open', open !== false);
+  if (open !== false) {
+    document.getElementById('setMyName').value = STATE.me.name || '';
+    document.getElementById('setMyLi').value = STATE.me.li || '';
+    document.getElementById('setMembers').value = STATE.members.map(m => m.name + (m.li ? ' · ' + m.li : '')).join('\n');
+    document.getElementById('setSyncUrl').value = STATE.syncUrl || '';
+    document.getElementById('setTeamId').value = STATE.teamId || 'acg-guild';
+  }
+}
+function saveSettings() {
+  STATE.me.name = document.getElementById('setMyName').value.trim();
+  STATE.me.li = document.getElementById('setMyLi').value.trim();
+  STATE.syncUrl = document.getElementById('setSyncUrl').value.trim();
+  STATE.teamId = document.getElementById('setTeamId').value.trim() || 'acg-guild';
+  const lines = document.getElementById('setMembers').value.split('\n').map(l => l.trim()).filter(Boolean);
+  STATE.members = lines.map(l => {
+    const parts = l.split('·').map(s => s.trim());
+    return { name: parts[0], li: parts[1] || '' };
+  });
+  persist();
+  toggleDrawer(false);
+  toast('✓ settings saved');
+  render();
+}
+
+// ── Sync · JSON export/import + optional endpoint ──────
+function exportAll() {
+  const blob = new Blob([JSON.stringify({ schemaVersion:'fallguild-v1', exportedAt: Date.now(), state: STATE }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fallguild-export-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('↓ exported');
+}
+function importFile() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const p = JSON.parse(r.result);
+        if (!p.state) throw new Error('not a fallguild export');
+        const mode = confirm('OK = MERGE with current data · Cancel = REPLACE') ? 'merge' : 'replace';
+        if (mode === 'replace') Object.assign(STATE, p.state);
+        else {
+          // Merge boosts (by id) · engagement (per boost · per member)
+          (p.state.boosts || []).forEach(b => {
+            const existing = STATE.boosts.find(x => x.id === b.id);
+            if (!existing) STATE.boosts.unshift(b);
+            else existing.engagement = Object.assign({}, existing.engagement, b.engagement);
+          });
+          // Merge members (by name)
+          (p.state.members || []).forEach(m => {
+            if (!STATE.members.find(x => x.name === m.name)) STATE.members.push(m);
+          });
+        }
+        persist(); render();
+        toast('↑ imported · ' + (p.state.boosts||[]).length + ' boosts');
+      } catch(err) { toast('import failed: ' + err.message); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+async function pushSync() {
+  if (!STATE.syncUrl) { toast('Set Sync URL first'); return; }
+  try {
+    const r = await fetch(STATE.syncUrl.replace(/\/$/,'') + '/sync/' + encodeURIComponent(STATE.teamId), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ schemaVersion:'fallguild-v1', exportedAt: Date.now(), state: STATE })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    toast('↗ pushed to ' + STATE.teamId);
+  } catch(e) { toast('push failed: ' + e.message); }
+}
+async function pullSync() {
+  if (!STATE.syncUrl) { toast('Set Sync URL first'); return; }
+  try {
+    const r = await fetch(STATE.syncUrl.replace(/\/$/,'') + '/sync/' + encodeURIComponent(STATE.teamId));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const p = await r.json();
+    if (!p.state) throw new Error('bad payload');
+    // Merge by default
+    (p.state.boosts || []).forEach(b => {
+      const existing = STATE.boosts.find(x => x.id === b.id);
+      if (!existing) STATE.boosts.unshift(b);
+      else existing.engagement = Object.assign({}, existing.engagement, b.engagement);
+    });
+    (p.state.members || []).forEach(m => {
+      if (!STATE.members.find(x => x.name === m.name)) STATE.members.push(m);
+    });
+    persist(); render();
+    toast('↙ pulled · ' + (p.state.boosts||[]).length + ' boosts merged');
+  } catch(e) { toast('pull failed: ' + e.message); }
+}
+function resetAll() {
+  if (!confirm('Reset ALL fallguild data on this device? Members, boosts, history, settings.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ── Toast ────────────────────────────────────────────────
+function toast(msg) {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2400);
+}
+
+// ── Boot ────────────────────────────────────────────────
+restore();
+initMesh();
+render();
+setInterval(render, 30000); // refresh timers every 30s
+// First-run: open settings if no name set
+if (!STATE.me.name) setTimeout(() => toggleDrawer(true), 600);
+
+console.log('%c◊·κ FallGuild', 'color:#d4a853;font-weight:bold', 'v1 · LinkedIn gravity coordination · prime 79 · ACG');
+</script>
+
+<!-- Fall-palette CDN -->
+<script src="https://sjgant80-hub.github.io/fall-palette/fall-palette.js" defer></script>
+
+</body>
+</html>
