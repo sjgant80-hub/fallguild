@@ -103,4 +103,4 @@ Every post is classified into the 7-ring spine (R0 ground · R1 sensor · R2 gat
 
 ## Licence
 
-MIT. Part of the Fall sovereign tool estate. ◊·κ=1
+MIT. Part of the Fall sovereign tool estate. 
